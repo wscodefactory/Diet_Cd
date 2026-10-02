@@ -216,6 +216,7 @@ tfoot td { font-weight: 700; border-bottom: 0; }
 
 /* 홈: 사람/반려동물 입구를 칸으로 나눈 도시락 통 */
 button.logo { border: 0; background: none; padding: 0; text-align: left; }
+button.logo:hover { opacity: 0.8; }
 .home-tray { grid-template-areas: 'human' 'pet' 'recent' 'how'; }
 .go-human { grid-area: human; } .go-pet { grid-area: pet; }
 .home-recent { grid-area: recent; } .home-how { grid-area: how; }
