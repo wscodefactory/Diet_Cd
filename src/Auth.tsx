@@ -230,7 +230,7 @@ export default function Auth({ user, onUser, onClose, start = 'login' }: { user:
       {user ? (
         <Section title={welcome ? t('가입 완료! 환영해요 🎉', 'You are signed up! Welcome 🎉') : t('내 계정', 'My account')}>
           <dl className="account">
-            <div><dt>{t('아이디', 'ID')}</dt><dd>{user.id}</dd></div>
+            <div><dt>{t('아이디', 'ID')}</dt><dd>{user.id}{user.role === 'admin' && <> <span className="badge admin">{t('관리자', 'Admin')}</span></>}</dd></div>
             <div><dt>{t('이메일', 'Email')}</dt><dd>{user.email} <span className="badge">{t('인증됨', 'Verified')}</span></dd></div>
             <div><dt>{t('가입일', 'Joined')}</dt><dd>{new Date(user.createdAt).toLocaleDateString(t('ko-KR', 'en-US'))}</dd></div>
           </dl>

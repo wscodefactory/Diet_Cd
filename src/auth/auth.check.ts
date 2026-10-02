@@ -71,4 +71,10 @@ for (let i = 0; i < MAX_CODE_TRIES; i++) await auth.verifySignup('z@example.com'
 const tooMany = await auth.verifySignup('z@example.com', s4.value.devCode!)
 ok(!tooMany.ok && tooMany.error === 'too_many_tries', 'code tries limited')
 
+const seeded = await auth.startSignup({ id: 'tlreks1234', email: 'new@example.com', password: PW })
+ok(!seeded.ok && seeded.error === 'id_taken', 'seeded admin id is reserved')
+const notAdmin = await auth.login('tlreks1234', PW)
+ok(!notAdmin.ok, 'seeded admin rejects a wrong password')
+ok(!mem.get('auth.users')!.includes('tlreks1234'), 'seed is not copied into storage')
+
 console.log('auth.check: all passed')
