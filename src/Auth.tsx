@@ -208,9 +208,9 @@ function Signup({ onDone }: { onDone: (u: User) => void }) {
 }
 
 /** onUser의 fresh: 방금 가입한 경우 true (환영 화면을 보여주고, 로그인이면 바로 원래 화면으로) */
-export default function Auth({ user, onUser, onClose }: { user: User | null; onUser: (u: User | null, fresh?: boolean) => void; onClose: () => void }) {
+export default function Auth({ user, onUser, onClose, start = 'login' }: { user: User | null; onUser: (u: User | null, fresh?: boolean) => void; onClose: () => void; start?: 'login' | 'signup' }) {
   const t = useT()
-  const [tab, setTab] = useState<'login' | 'signup'>('login')
+  const [tab, setTab] = useState(start)
   const [welcome, setWelcome] = useState(false)
 
   return (

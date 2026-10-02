@@ -246,6 +246,7 @@ button.logo { border: 0; background: none; padding: 0; text-align: left; }
 }
 .home-recent .rows li { padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .home-recent .rows li:last-child { border-bottom: 0; }
+.home-recent > .row { margin-top: 12px; }
 .how { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: h; }
 .how li { counter-increment: h; display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; font-size: 14px; }
 .how li::before { content: counter(h); grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
