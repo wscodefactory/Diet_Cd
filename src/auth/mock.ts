@@ -16,6 +16,15 @@ export const MAX_CODE_TRIES = 5
 export const MAX_LOGIN_FAILS = 5
 export const LOCK_TIME = 5 * 60_000
 
+// 미리 넣어 둔 테스트용 관리자 계정. 가입·이메일 인증 없이 어느 브라우저에서나 로그인됨.
+// 저장소가 공개라서 비밀번호는 평문 없이 솔트 붙인 해시만 둠 (그래도 공개 코드에서 보이므로 테스트 전용)
+const SEED: Record<string, Account> = {
+  tlreks1234: {
+    id: 'tlreks1234', email: 'admin@diet.test', createdAt: Date.UTC(2026, 9, 2), role: 'admin',
+    pw: { salt: 'Qek/azV9tpRxmy23/zcm2Q==', hash: 'bXQvShCilmE+9iqHnS6NkIOWn1PgHFaTc0jA3yG0Yd8=', iter: 600_000 },
+  },
+}
+
 const K = { users: 'auth.users', pending: 'auth.pending', session: 'auth.session', fails: 'auth.fails' }
 
 const b64 = (buf: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(buf)))
@@ -57,9 +66,10 @@ export function createMockAuth(opt: { storage: Store; now?: () => number; iterat
     }
   }
   const write = (k: string, v: unknown) => storage.setItem(k, JSON.stringify(v))
-  const users = () => read<Record<string, Account>>(K.users, {})
+  const stored = () => read<Record<string, Account>>(K.users, {})
+  const users = () => ({ ...stored(), ...SEED })
   const pendings = () => read<Record<string, Pending>>(K.pending, {})
-  const pub = (a: Account): User => ({ id: a.id, email: a.email, createdAt: a.createdAt })
+  const pub = (a: Account): User => ({ id: a.id, email: a.email, createdAt: a.createdAt, ...(a.role && { role: a.role }) })
 
   async function send(p: Pending): Promise<CodeSent> {
     const code = newCode()
@@ -119,7 +129,7 @@ export function createMockAuth(opt: { storage: Store; now?: () => number; iterat
       if (us[p.id]) return fail('id_taken')
       if (Object.values(us).some(a => a.email === email)) return fail('email_taken')
       const acc: Account = { id: p.id, email, pw: p.pw, createdAt: now() }
-      write(K.users, { ...us, [acc.id]: acc })
+      write(K.users, { ...stored(), [acc.id]: acc })
       delete all[email]
       write(K.pending, all)
       write(K.session, acc.id)

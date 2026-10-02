@@ -1,7 +1,8 @@
 // 인증 서비스 인터페이스. 화면은 이 인터페이스만 알고, 실제 구현(Firebase Auth, Supabase Auth, 자체 서버 등)은
 // 나중에 갈아 끼움 (docs/paid-items.md). 지금은 브라우저 안에서만 도는 목업(mock.ts)을 씀.
 
-export type User = { id: string; email: string; createdAt: number }
+/** role 'admin': 테스트용 관리자 계정 (mock.ts의 SEED) */
+export type User = { id: string; email: string; createdAt: number; role?: 'admin' }
 
 export type AuthError =
   | 'invalid_id' | 'invalid_pw' | 'invalid_email'

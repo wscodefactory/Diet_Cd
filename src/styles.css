@@ -252,3 +252,4 @@ button.logo:hover { opacity: 0.8; }
 .how li { counter-increment: h; display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; font-size: 14px; }
 .how li::before { content: counter(h); grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
 .how li span { font-size: 13px; color: var(--muted); }
+.badge.admin { background: var(--brand-strong); color: #fff; }
