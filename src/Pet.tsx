@@ -1,7 +1,7 @@
 import { PET_ALLERGENS, type PetAllergen } from './data.ts'
 import { SPECIES, petGuide, speciesOf, usesEnergyModel } from './pet.ts'
 import type { Health, Pet as P } from './plan.ts'
-import { Chips, Evidence, Field, Num, Photo, Section, Seg, Text, useLocal, useT } from './ui.tsx'
+import { Chips, Evidence, Field, Hero, Num, Section, Seg, Text, useLocal, useT } from './ui.tsx'
 
 const newPet = (n: number): P => ({
   id: String(Date.now()) + n, name: '', species: 'dog', age: 3, weight: 5, activity: 'mid',
@@ -40,6 +40,8 @@ export default function Pet() {
         <p>{t('여러 마리를 등록하면 한 마리씩 따로 관리해요.', 'Register several pets and manage each one separately.')}</p>
       </div>
 
+      <div className="layout">
+      <aside className="inputs" aria-label={t('입력 조건', 'Your conditions')}>
       <div className="chips" role="group" aria-label={t('등록된 동물', 'Registered pets')}>
         {store.pets.map((p, i) => (
           <button key={p.id} className="chip" aria-pressed={p.id === pet.id} onClick={() => setStore({ ...store, current: p.id })}>
@@ -93,10 +95,14 @@ export default function Pet() {
           <button className="btn ghost small" style={{ marginTop: 12 }} onClick={remove}>{t('이 동물 삭제', 'Remove this pet')}</button>
         )}
       </Section>
+      </aside>
 
-      {pet.weight > 0 && pet.age > 0 ? <Result pet={pet} title={label(pet, store.pets.indexOf(pet))} speciesName={speciesName(pet)} /> : (
-        <p className="warn">{t('나이와 체중을 입력하면 급여 정보가 나와요.', 'Enter age and weight to see feeding guidance.')}</p>
-      )}
+      <div className="results">
+        {pet.weight > 0 && pet.age > 0 ? <Result pet={pet} title={label(pet, store.pets.indexOf(pet))} speciesName={speciesName(pet)} /> : (
+          <div className="tray empty"><p>{t('나이와 체중을 입력하면 급여 정보가 나와요.', 'Enter age and weight to see feeding guidance.')}</p></div>
+        )}
+      </div>
+      </div>
     </>
   )
 }
@@ -126,24 +132,24 @@ function Result({ pet, title, speciesName }: { pet: P; title: string; speciesNam
 
   return (
     <>
-      <div className="photos">
-        <Photo emojis={[speciesOf(pet).emoji, ...guide.lines.slice(0, 2).map(l => l.emoji)]} title={`${title} · ${speciesName} · ${t(guide.stageName)}`} caption={t(guide.headline)} />
-      </div>
+      <div className="tray">
+      <Hero emojis={[speciesOf(pet).emoji, ...guide.lines.map(l => l.emoji)]} kicker={`${title} · ${speciesName} · ${t(guide.stageName)}`}
+        big={guide.stats[0]?.value ?? ''} unit={guide.stats[0] && t(guide.stats[0].label)} caption={t(guide.headline)} />
 
-      <Section no={1} title={t('추천 급여 구성', 'Recommended feeding')}>
+      <Section no={1} area="meals" title={t('추천 급여 구성', 'Recommended feeding')}>
         <ul className="rows">
           {guide.lines.map((l, i) => <li key={i}><span>{l.emoji}</span><span className="grow">{t(l.text)}</span></li>)}
         </ul>
       </Section>
 
-      <Section no={2} title={t('급여량과 주요 정보', 'Amounts and key numbers')}>
+      <Section no={2} area="nut" title={t('급여량과 주요 정보', 'Amounts and key numbers')}>
         <div className="stats">
           {guide.stats.map((s, i) => <div className="stat" key={i}><b>{s.value}</b><span>{t(s.label)}</span></div>)}
         </div>
         <p className="muted" style={{ marginTop: 8 }}>{t(guide.assumption)}</p>
       </Section>
 
-      <Section no={3} title={t('추천 이유', 'Why this plan')}>
+      <Section no={3} area="why" title={t('추천 이유', 'Why this plan')}>
         <ul className="reasons">
           {guide.reasons.map((r, i) => <li key={i}>{t(r)}</li>)}
           {healthNote && <li>{healthNote}</li>}
@@ -151,7 +157,7 @@ function Result({ pet, title, speciesName }: { pet: P; title: string; speciesNam
         {vet && <p className="warn" style={{ marginTop: 8 }}>{t('이 건강 상태는 수의사 상담이 먼저예요.', 'With this condition, consult your veterinarian first.')}</p>}
       </Section>
 
-      <Section no={4} title={t('반영된 조건과 제외 식재료', 'Applied conditions and excluded ingredients')}>
+      <Section no={4} area="cond" title={t('반영된 조건과 제외 식재료', 'Applied conditions and excluded ingredients')}>
         <div className="chips">{conditions.map(c => <span key={c} className="chip soft">{c}</span>)}</div>
         <p className="muted" style={{ margin: '12px 0 6px' }}>{t('제외한 식재료', 'Excluded ingredients')}</p>
         <div className="chips">
@@ -160,6 +166,7 @@ function Result({ pet, title, speciesName }: { pet: P; title: string; speciesNam
       </Section>
 
       <Evidence target="animal" species={speciesOf(pet).id} />
+      </div>
       <p className="muted">{t('이 정보는 참고용이며 수의사의 진료를 대신하지 않아요.', 'This is for reference and does not replace veterinary care.')}</p>
     </>
   )
