@@ -51,7 +51,9 @@ main > *, .form > *, .layout > * { min-width: 0; } /* 좁은 화면에서 그리
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex;
   background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
 }
-.tabbar button { flex: 1; border: 0; background: transparent; padding: 8px; border-radius: 12px; font-weight: 700; color: var(--muted); }
+.tabbar button { flex: 1; min-width: 0; border: 0; background: transparent; padding: 6px 2px; border-radius: 12px; font-weight: 700; font-size: 12px; color: var(--muted);
+  display: grid; justify-items: center; gap: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tabbar button > span { font-size: 18px; line-height: 1.2; }
 .tabbar button[aria-pressed='true'] { color: var(--brand-strong); background: var(--soft); }
 @media (min-width: 600px) {
   .mode-top { display: block; }
@@ -211,3 +213,40 @@ tfoot td { font-weight: 700; border-bottom: 0; }
 .account dt { width: 64px; flex: none; color: var(--muted); font-weight: 600; }
 .account dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 홈: 사람/반려동물 입구를 칸으로 나눈 도시락 통 */
+button.logo { border: 0; background: none; padding: 0; text-align: left; }
+.home-tray { grid-template-areas: 'human' 'pet' 'recent' 'how'; }
+.go-human { grid-area: human; } .go-pet { grid-area: pet; }
+.home-recent { grid-area: recent; } .home-how { grid-area: how; }
+@media (min-width: 760px) {
+  .home-tray { grid-template-columns: 1fr 1fr; padding: 10px; gap: 10px; border-radius: 28px;
+    grid-template-areas: 'human pet' 'recent how'; }
+}
+.go {
+  display: grid; grid-template-columns: minmax(84px, 130px) 1fr; gap: 14px; align-items: center;
+  text-align: left; color: var(--text); transition: transform 0.15s;
+}
+.go:hover { transform: translateY(-2px); }
+.go-human { background: #fff4ec !important; }
+.go-pet { background: #ffe3cc !important; }
+.go .plate { display: block; }
+@media (max-width: 420px) { .go { grid-template-columns: 84px 1fr; padding: 14px; } .go-text strong { font-size: 22px; } }
+.go-pet .plate { background: radial-gradient(circle at 35% 30%, #fffdf9, #ffe3cc 72%); border-color: #f3d9c2; }
+.intro h1, .go-text { word-break: keep-all; }
+.go-text { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.go-text b { font-size: 13px; color: var(--brand-strong); }
+.go-text strong { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.2; color: var(--brand-strong); }
+.go-text > span { font-size: 13px; color: var(--muted); }
+.go-text .btn { font-style: normal; margin-top: 6px; padding: 9px 14px; }
+@media (min-width: 1000px) {
+  .go { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 28px 24px; }
+  .go .plate { width: min(100%, 200px); }
+  .go-text { justify-items: center; }
+}
+.home-recent .rows li { padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.home-recent .rows li:last-child { border-bottom: 0; }
+.how { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: h; }
+.how li { counter-increment: h; display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; font-size: 14px; }
+.how li::before { content: counter(h); grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+.how li span { font-size: 13px; color: var(--muted); }
