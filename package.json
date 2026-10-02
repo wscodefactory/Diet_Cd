@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "node src/plan.check.ts"
+    "check": "node src/plan.check.ts && node src/auth/auth.check.ts"
   },
   "dependencies": {
     "react": "^19.1.0",
