@@ -46,7 +46,8 @@ export default function App() {
       <header className="top">
         <button type="button" className="logo" aria-label={ko ? '홈으로' : 'Go home'} onClick={() => go('home')}>AI <span>{ko ? '식단' : 'Diet'}</span></button>
         <div className="mode-top">
-          <Seg label={ko ? '메뉴' : 'Menu'} value={showAuth ? ('' as Mode) : mode} onChange={go} options={modes} />
+          {/* 상단은 홈 메뉴 없이 로고로 홈 이동 */}
+          <Seg label={ko ? '메뉴' : 'Menu'} value={showAuth ? ('' as Mode) : mode} onChange={go} options={modes.filter(([v]) => v !== 'home')} />
         </div>
         <Seg label="Language" value={lang} onChange={setLang} options={[['ko', '한국어'], ['en', 'EN']]} />
         <button type="button" className="btn ghost small account-top" aria-pressed={showAuth} onClick={() => openAuth()}>👤 {account}</button>
