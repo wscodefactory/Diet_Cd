@@ -26,8 +26,8 @@ function Plate({ emojis }: { emojis: string[] }) {
   )
 }
 
-/** 로그인 후 첫 화면: 사람/반려동물 식단으로 들어가는 도시락 통 */
-export default function Home({ userId, onGo }: { userId: string; onGo: (m: Target) => void }) {
+/** 첫 화면: 사람/반려동물 식단으로 들어가는 도시락 통. userId가 없으면 로그아웃 상태: 둘러보기만 하고, 입구를 누르면 로그인 화면으로 (App에서 처리) */
+export default function Home({ userId, onGo, onAuth }: { userId?: string; onGo: (m: Target) => void; onAuth: (tab: 'login' | 'signup') => void }) {
   const t = useT()
   const h = read<H>('diet.human')
   const pets = read<{ pets: P[] }>('diet.pets')?.pets ?? []
@@ -38,8 +38,12 @@ export default function Home({ userId, onGo }: { userId: string; onGo: (m: Targe
   return (
     <>
       <div className="intro">
-        <h1>{t(`${userId}님, 오늘은 누구의 식단을 짜 볼까요?`, `Hi ${userId}, whose meals shall we plan today?`)}</h1>
-        <p>{t('사람 식단과 반려동물 급여 정보를 한곳에서 만들어요.', 'Plan meals for people and feeding for pets in one place.')}</p>
+        <h1>{userId
+          ? t(`${userId}님, 오늘은 누구의 식단을 짜 볼까요?`, `Hi ${userId}, whose meals shall we plan today?`)
+          : t('연구 자료를 근거로 짜는 사람·반려동물 식단', 'Meal plans for people and pets, based on research')}</h1>
+        <p>{userId
+          ? t('사람 식단과 반려동물 급여 정보를 한곳에서 만들어요.', 'Plan meals for people and feeding for pets in one place.')
+          : t('조건을 넣으면 AI가 식단을 구성하고, 왜 그렇게 짰는지 참고한 자료와 함께 보여줘요.', 'Enter your conditions and the AI builds a plan, showing why with the sources it used.')}</p>
       </div>
 
       <div className="tray home-tray">
@@ -63,21 +67,32 @@ export default function Home({ userId, onGo }: { userId: string; onGo: (m: Targe
           </span>
         </button>
 
-        <section className="card home-recent">
-          <h2>{t('최근 입력한 조건', 'Your recent conditions')}</h2>
-          <ul className="rows">
-            <li>
-              <span className="grow">🧑 {h ? `${goal} · ${period} · ${t(`한 끼 ${h.budget.toLocaleString()}원`, `${h.budget.toLocaleString()} KRW/meal`)}` : t('아직 입력 전이에요', 'Nothing entered yet')}</span>
-              <button type="button" className="btn ghost small" onClick={() => onGo('human')}>{h ? t('이어서', 'Continue') : t('시작', 'Start')}</button>
-            </li>
-            <li>
-              <span className="grow">🐾 {pets.length
-                ? pets.map((p, i) => `${speciesOf(p).emoji} ${p.name || t(`동물 ${i + 1}`, `Pet ${i + 1}`)}`).join(', ')
-                : t('등록한 동물이 없어요', 'No pets registered')}</span>
-              <button type="button" className="btn ghost small" onClick={() => onGo('pet')}>{pets.length ? t('이어서', 'Continue') : t('시작', 'Start')}</button>
-            </li>
-          </ul>
-        </section>
+        {userId ? (
+          <section className="card home-recent">
+            <h2>{t('최근 입력한 조건', 'Your recent conditions')}</h2>
+            <ul className="rows">
+              <li>
+                <span className="grow">🧑 {h ? `${goal} · ${period} · ${t(`한 끼 ${h.budget.toLocaleString()}원`, `${h.budget.toLocaleString()} KRW/meal`)}` : t('아직 입력 전이에요', 'Nothing entered yet')}</span>
+                <button type="button" className="btn ghost small" onClick={() => onGo('human')}>{h ? t('이어서', 'Continue') : t('시작', 'Start')}</button>
+              </li>
+              <li>
+                <span className="grow">🐾 {pets.length
+                  ? pets.map((p, i) => `${speciesOf(p).emoji} ${p.name || t(`동물 ${i + 1}`, `Pet ${i + 1}`)}`).join(', ')
+                  : t('등록한 동물이 없어요', 'No pets registered')}</span>
+                <button type="button" className="btn ghost small" onClick={() => onGo('pet')}>{pets.length ? t('이어서', 'Continue') : t('시작', 'Start')}</button>
+              </li>
+            </ul>
+          </section>
+        ) : (
+          <section className="card home-recent">
+            <h2>{t('로그인하고 시작하세요', 'Log in to get started')}</h2>
+            <p className="muted">{t('식단 만들기와 급여 정보는 로그인한 뒤에 쓸 수 있어요.', 'Meal plans and feeding guidance are available after you log in.')}</p>
+            <div className="row">
+              <button type="button" className="btn" onClick={() => onAuth('login')}>{t('로그인', 'Log in')}</button>
+              <button type="button" className="btn ghost" onClick={() => onAuth('signup')}>{t('회원가입', 'Sign up')}</button>
+            </div>
+          </section>
+        )}
 
         <section className="card home-how">
           <h2>{t('이렇게 만들어요', 'How it works')}</h2>

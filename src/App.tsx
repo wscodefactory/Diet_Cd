@@ -12,19 +12,20 @@ export default function App() {
   const [lang, setLang] = useState<Lang>('ko')
   const [mode, setMode] = useState<Mode>('home')
   const [view, setView] = useState<'plan' | 'auth'>('plan')
+  const [authTab, setAuthTab] = useState<'login' | 'signup'>('login')
   // undefined: 로그인 상태를 아직 확인하는 중
   const [user, setUser] = useState<User | null | undefined>(undefined)
   const ko = lang === 'ko'
   const modes: [Mode, string][] = [['home', ko ? '🏠 홈' : '🏠 Home'], ['human', ko ? '🧑 사람' : '🧑 People'], ['pet', ko ? '🐾 반려동물' : '🐾 Pets']]
   const account = user ? user.id : ko ? '로그인' : 'Log in'
-  // 서비스는 로그인한 뒤에만: 로그아웃 상태면 어떤 메뉴를 눌러도 로그인 화면
-  const gated = user === null
+  // 홈은 누구나 볼 수 있고, 서비스(사람·반려동물 식단)는 로그인한 뒤에만: 로그아웃 상태에서 누르면 로그인 화면
+  const gated = user === null && mode !== 'home'
   const showAuth = gated || view === 'auth'
   const onUser = (u: User | null, fresh?: boolean) => {
     setUser(u)
-    // 로그인하면 홈 화면으로. 방금 가입했으면 환영 화면을 먼저 보여줌
-    if (u && !fresh) setMode('home')
-    setView(u && !fresh ? 'plan' : 'auth')
+    // 로그인하면 가려던 화면(누른 메뉴)으로. 방금 가입했으면 환영 화면을 먼저, 로그아웃하면 홈으로
+    if (!u) setMode('home')
+    setView(u && fresh ? 'auth' : 'plan')
   }
 
   useEffect(() => {
@@ -38,34 +39,30 @@ export default function App() {
   }, [mode, lang])
 
   const go = (m: Mode) => { setMode(m); setView('plan'); window.scrollTo({ top: 0 }) }
-  const openAuth = () => { setView('auth'); window.scrollTo({ top: 0 }) }
+  const openAuth = (tab: 'login' | 'signup' = 'login') => { setAuthTab(tab); setView('auth'); window.scrollTo({ top: 0 }) }
 
   return (
     <LangCtx.Provider value={lang}>
       <header className="top">
-        {user
-          ? <button type="button" className="logo" aria-label={ko ? '홈으로' : 'Go home'} onClick={() => go('home')}>AI <span>{ko ? '식단' : 'Diet'}</span></button>
-          : <div className="logo">AI <span>{ko ? '식단' : 'Diet'}</span></div>}
-        {user && (
-          <div className="mode-top">
-            <Seg label={ko ? '메뉴' : 'Menu'} value={showAuth ? ('' as Mode) : mode} onChange={go} options={modes} />
-          </div>
-        )}
+        <button type="button" className="logo" aria-label={ko ? '홈으로' : 'Go home'} onClick={() => go('home')}>AI <span>{ko ? '식단' : 'Diet'}</span></button>
+        <div className="mode-top">
+          <Seg label={ko ? '메뉴' : 'Menu'} value={showAuth ? ('' as Mode) : mode} onChange={go} options={modes} />
+        </div>
         <Seg label="Language" value={lang} onChange={setLang} options={[['ko', '한국어'], ['en', 'EN']]} />
-        <button type="button" className="btn ghost small account-top" aria-pressed={showAuth} onClick={openAuth}>👤 {account}</button>
+        <button type="button" className="btn ghost small account-top" aria-pressed={showAuth} onClick={() => openAuth()}>👤 {account}</button>
       </header>
       <main>
         {user === undefined ? null
-          : showAuth ? <Auth user={user} onUser={onUser} onClose={() => go(mode)} />
-          : mode === 'home' ? <Home userId={user!.id} onGo={go} />
+          : showAuth ? <Auth key={authTab} start={authTab} user={user} onUser={onUser} onClose={() => go(mode)} />
+          : mode === 'home' ? <Home userId={user?.id} onGo={go} onAuth={openAuth} />
           : mode === 'human' ? <Human /> : <Pet />}
       </main>
       {/* 휴대폰: 홈·사람·반려동물 전환과 계정은 엄지가 닿는 아래 탭바로 */}
       <nav className="tabbar" aria-label={ko ? '메뉴' : 'Menu'}>
-        {user && modes.map(([v, text]) => (
+        {modes.map(([v, text]) => (
           <button key={v} type="button" aria-pressed={!showAuth && v === mode} onClick={() => go(v)}><Tab text={text} /></button>
         ))}
-        <button type="button" aria-pressed={showAuth} onClick={openAuth}><Tab text={`👤 ${user ? (ko ? '내 계정' : 'Account') : account}`} /></button>
+        <button type="button" aria-pressed={showAuth} onClick={() => openAuth()}><Tab text={`👤 ${user ? (ko ? '내 계정' : 'Account') : account}`} /></button>
       </nav>
     </LangCtx.Provider>
   )
