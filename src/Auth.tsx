@@ -207,13 +207,20 @@ function Signup({ onDone }: { onDone: (u: User) => void }) {
   )
 }
 
-export default function Auth({ user, onUser, onClose }: { user: User | null; onUser: (u: User | null) => void; onClose: () => void }) {
+/** onUser의 fresh: 방금 가입한 경우 true (환영 화면을 보여주고, 로그인이면 바로 원래 화면으로) */
+export default function Auth({ user, onUser, onClose }: { user: User | null; onUser: (u: User | null, fresh?: boolean) => void; onClose: () => void }) {
   const t = useT()
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [welcome, setWelcome] = useState(false)
 
   return (
     <div className="auth">
+      {!user && (
+        <div className="intro">
+          <h1>{t('로그인하고 시작해요', 'Log in to get started')}</h1>
+          <p>{t('식단 추천은 로그인한 뒤에 쓸 수 있어요. 계정이 없으면 회원가입을 해 주세요.', 'Meal plans are available after you log in. No account yet? Sign up.')}</p>
+        </div>
+      )}
       <p className="warn proto">
         {t(
           '프로토타입 안내: 계정 정보는 이 브라우저에만 저장되고 실제 메일은 보내지 않아요. 실제 보안이 적용된 로그인이 아니니 쓰고 있는 비밀번호는 넣지 마세요.',
@@ -238,7 +245,7 @@ export default function Auth({ user, onUser, onClose }: { user: User | null; onU
             options={[['login', t('로그인', 'Log in')], ['signup', t('회원가입', 'Sign up')]]} />
           {tab === 'login'
             ? <Login onDone={u => { setWelcome(false); onUser(u) }} />
-            : <Signup onDone={u => { setWelcome(true); onUser(u) }} />}
+            : <Signup onDone={u => { setWelcome(true); onUser(u, true) }} />}
         </Section>
       )}
     </div>
