@@ -4,7 +4,7 @@ import {
   SLOTS, WEEKDAYS, alternatives, buildPlan, grams, humanTarget, isExcluded, mealTotals, pickMeal,
   type DayPlan, type Human as H,
 } from './plan.ts'
-import { Chips, Evidence, Field, Num, Photo, Section, Seg, Text, useLocal, useT } from './ui.tsx'
+import { Chips, Evidence, Field, Hero, Num, Section, Seg, Text, useLocal, useT } from './ui.tsx'
 
 const INIT: H = {
   sex: 'f', age: 30, height: 165, weight: 60, goal: 'keep', activity: 'mid',
@@ -18,12 +18,14 @@ export default function Human() {
   // 추천받은 시점의 조건과 식단을 함께 보관 (입력을 고쳐도 결과가 멋대로 바뀌지 않게)
   const [res, setRes] = useState<{ h: H; plan: DayPlan[] } | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLElement>(null)
 
   const valid = h.age > 0 && h.height > 0 && h.weight > 0 && h.budget > 0 && (h.mode === 'days' ? h.days >= 1 : h.weekdays.length > 0)
 
   const submit = () => {
     setRes({ h, plan: buildPlan(h) })
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 0)
+    // 데스크톱은 결과가 입력 옆에 바로 보이므로, 결과가 아래에 쌓이는 좁은 화면에서만 이동
+    if (window.matchMedia('(max-width: 999px)').matches) setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 0)
   }
 
   return (
@@ -33,6 +35,8 @@ export default function Human() {
         <p>{t('조건을 입력하면 주기별 식단을 구성해 드려요.', 'Enter your conditions to get a plan for your period.')}</p>
       </div>
 
+      <div className="layout">
+      <aside className="inputs" ref={formRef} aria-label={t('입력 조건', 'Your conditions')}>
       <Section title={t('신체 정보와 목표', 'Body and goal')}>
         <div className="form">
           <Field label={t('성별', 'Sex')}>
@@ -82,15 +86,24 @@ export default function Human() {
       <button className="btn block" disabled={!valid} onClick={submit}>
         {t('식단 추천 받기', 'Get my plan')}
       </button>
+      </aside>
 
-      <div ref={resultRef} style={{ scrollMarginTop: 70, display: 'grid', gap: 16 }}>
-        {res && <Result h={res.h} plan={res.plan} setPlan={plan => setRes({ h: res.h, plan })} />}
+      <div className="results" ref={resultRef}>
+        {res ? (
+          <Result h={res.h} plan={res.plan} setPlan={plan => setRes({ h: res.h, plan })}
+            onEdit={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+        ) : (
+          <div className="tray empty">
+            <p>{t('조건을 입력하고 ‘식단 추천 받기’를 누르면 이 도시락 칸에 식단이 담겨요.', 'Enter your conditions and press “Get my plan” to fill this lunch box.')}</p>
+          </div>
+        )}
+      </div>
       </div>
     </>
   )
 }
 
-function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayPlan[]) => void }) {
+function Result({ h, plan, setPlan, onEdit }: { h: H; plan: DayPlan[]; setPlan: (p: DayPlan[]) => void; onEdit: () => void }) {
   const t = useT()
   const [day, setDay] = useState(0)
   const [open, setOpen] = useState<string | null>(null) // 대안을 펼친 구성: "끼니-순서"
@@ -113,17 +126,20 @@ function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayP
 
   return (
     <>
-      <Seg label={t('날짜', 'Day')} value={String(d)} onChange={v => { setDay(Number(v)); setOpen(null) }}
-        options={plan.map((dp, i) => [String(i), t(dp.label)])} />
-
-      {/* 음식 사진과 구성을 먼저 */}
-      <div className="photos">
-        {meals.map(m => (
-          <Photo key={m.slot} emojis={m.items.map(i => i.emoji)} title={t(SLOTS[m.slot].name)} caption={m.items.map(i => t(i.name)).join(' · ')} />
-        ))}
+      <div className="result-bar">
+        <Seg label={t('날짜', 'Day')} value={String(d)} onChange={v => { setDay(Number(v)); setOpen(null) }}
+          options={plan.map((dp, i) => [String(i), t(dp.label)])} />
+        <button className="btn ghost small edit" onClick={onEdit}>{t('조건 수정', 'Edit conditions')}</button>
       </div>
 
-      <Section no={1} title={t('추천 식단과 도시락 구성', 'Recommended meals and lunch box')}>
+      <div className="tray">
+      {/* 음식 사진과 구성을 먼저 */}
+      <Hero emojis={meals.flatMap(m => m.items.map(i => i.emoji))} kicker={t(plan[d].label)}
+        big={`${sum('kcal').toLocaleString()} kcal`}
+        caption={meals.map(m => m.items.map(i => t(i.name)).join(' + ')).join(' / ')} />
+
+      <Section no={1} area="meals" title={t('추천 식단과 도시락 구성', 'Recommended meals and lunch box')}>
+        <div className="meals">
         {meals.map((m, s) => (
           <div className="meal" key={s}>
             <div className="meal-head">
@@ -170,9 +186,11 @@ function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayP
             )}
           </div>
         ))}
+        </div>
       </Section>
 
-      <Section no={2} title={t('제공량과 주요 영양정보', 'Portions and key nutrition')}>
+      <Section no={2} area="nut" title={t('제공량과 주요 영양정보', 'Portions and key nutrition')}>
+        <Ring kcal={sum('kcal')} target={target.kcal} c={sum('c')} p={sum('p')} f={sum('f')} />
         <div className="scroll">
           <table>
             <thead>
@@ -205,7 +223,7 @@ function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayP
         </p>
       </Section>
 
-      <Section no={3} title={t('추천 이유', 'Why this plan')}>
+      <Section no={3} area="why" title={t('추천 이유', 'Why this plan')}>
         <ul className="reasons">
           <li>
             {t(
@@ -223,7 +241,7 @@ function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayP
         </ul>
       </Section>
 
-      <Section no={4} title={t('반영된 조건과 제외 식재료', 'Applied conditions and excluded foods')}>
+      <Section no={4} area="cond" title={t('반영된 조건과 제외 식재료', 'Applied conditions and excluded foods')}>
         <div className="chips">
           <span className="chip soft">{goalText}</span>
           <span className="chip soft">{actText}</span>
@@ -238,7 +256,35 @@ function Result({ h, plan, setPlan }: { h: H; plan: DayPlan[]; setPlan: (p: DayP
       </Section>
 
       <Evidence target="human" />
+      </div>
       <p className="muted">{t('이 식단은 참고용이며 의학적 진단이나 치료를 대신하지 않아요.', 'This plan is for reference and does not replace medical advice.')}</p>
     </>
+  )
+}
+
+/** 하루 합계 열량을 탄수화물·단백질·지방 열량 비율로 나눈 고리 */
+function Ring({ kcal, target, c, p, f }: { kcal: number; target: number; c: number; p: number; f: number }) {
+  const t = useT()
+  const parts = [c * 4, p * 4, f * 9]
+  const all = parts.reduce((a, b) => a + b, 0) || 1
+  const pc = Math.round((parts[0] / all) * 100)
+  const pp = Math.round((parts[1] / all) * 100)
+  const legend: [string, string, number, string][] = [
+    [t('탄수화물', 'Carbs'), `${c} g`, pc, 'var(--brand)'],
+    [t('단백질', 'Protein'), `${p} g`, pp, 'var(--peach)'],
+    [t('지방', 'Fat'), `${f} g`, 100 - pc - pp, 'var(--deep)'],
+  ]
+  return (
+    <div className="nut-top">
+      <div className="ring" role="img" aria-label={legend.map(([k, , n]) => `${k} ${n}%`).join(', ')}
+        style={{ background: `conic-gradient(var(--brand) 0 ${pc}%, var(--peach) 0 ${pc + pp}%, var(--deep) 0 100%)` }}>
+        <div><b>{kcal.toLocaleString()}</b><span>{t(`목표 ${target.toLocaleString()}`, `Goal ${target.toLocaleString()}`)}</span></div>
+      </div>
+      <ul className="legend">
+        {legend.map(([k, v, n, color]) => (
+          <li key={k}><i style={{ background: color }} />{k}<span>{v} · {n}%</span></li>
+        ))}
+      </ul>
+    </div>
   )
 }

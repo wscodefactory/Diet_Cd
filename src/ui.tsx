@@ -87,9 +87,10 @@ export function Chips<T extends string | number>(p: { value: T[]; options: [T, s
   )
 }
 
-export function Section(p: { no?: number; title: string; children: ReactNode }) {
+/** area: 결과 도시락 통(.tray) 안에서 차지할 칸 이름 */
+export function Section(p: { no?: number; title: string; area?: string; children: ReactNode }) {
   return (
-    <section className="card">
+    <section className={'card' + (p.area ? ` a-${p.area}` : '')}>
       <h2>
         {p.no && <span className="no">{p.no}</span>}
         {p.title}
@@ -99,17 +100,24 @@ export function Section(p: { no?: number; title: string; children: ReactNode }) 
   )
 }
 
-/** 실제 음식 사진 대신 쓰는 자리표시 이미지 (docs/paid-items.md) */
-export function Photo(p: { emojis: string[]; title: string; caption: string }) {
+/** 실제 음식 사진 대신 쓰는 자리표시 접시 (docs/paid-items.md) — 결과 도시락 통의 첫 칸 */
+export function Hero(p: { emojis: string[]; kicker: string; big: string; unit?: string; caption: string }) {
   const t = useT()
+  const n = p.emojis.length
   return (
-    <figure className="photo" style={{ margin: 0 }}>
-      <div className="img" role="img" aria-label={p.caption}>
-        {p.emojis.map((e, i) => <span key={i}>{e}</span>)}
-        <small>{t('예시 이미지', 'Sample image')}</small>
+    <figure className="card hero a-hero">
+      <div className="plate" role="img" aria-label={p.caption}>
+        {p.emojis.map((e, i) => {
+          const a = (i / n) * Math.PI * 2 - Math.PI / 2
+          const r = n > 1 ? 30 : 0
+          return <span key={i} style={{ left: `${50 + Math.cos(a) * r}%`, top: `${50 + Math.sin(a) * r}%` }}>{e}</span>
+        })}
       </div>
-      <figcaption className="cap">
-        <b>{p.title}</b>
+      <figcaption>
+        <small>{t('예시 이미지 · 실제 음식 사진은 추후 연결', 'Sample image · real food photos later')}</small>
+        <b>{p.kicker}</b>
+        <strong>{p.big}</strong>
+        {p.unit && <em>{p.unit}</em>}
         <span>{p.caption}</span>
       </figcaption>
     </figure>
@@ -122,7 +130,7 @@ export function Evidence({ target, species }: { target: 'human' | 'animal'; spec
   const [open, setOpen] = useState(false)
   const refs = REFS.filter(r => r.target === target && (!species || !r.species || r.species.includes(species)))
   return (
-    <Section no={5} title={t('근거 확인', 'Check the evidence')}>
+    <Section no={5} area="refs" title={t('근거 확인', 'Check the evidence')}>
       <button className="btn ghost block" aria-expanded={open} onClick={() => setOpen(!open)}>
         {open ? t('참고한 연구 및 자료 접기', 'Hide studies and sources') : t(`참고한 연구 및 자료 보기 (${refs.length})`, `View studies and sources (${refs.length})`)}
       </button>
